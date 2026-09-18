@@ -1,0 +1,1167 @@
+{
+  "paths": {
+    "/indexes/{indexName}/docs": {
+      "post": {
+        "summary": "Upload documents",
+        "description": "Creates, updates, and deletes documents in a single transactional request.",
+        "operationId": "uploadDocs",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "title": "UpsertOperation",
+                          "description": "Create or update a document.",
+                          "required": [
+                            "id",
+                            "doc"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "doc": {
+                              "type": "object"
+                            },
+                            "vectors": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                  "type": "number"
+                                }
+                              }
+                            },
+                            "accessList": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "policy": {
+                              "type": "object",
+                              "properties": {
+                                "duplicate": {
+                                  "type": "string",
+                                  "enum": [
+                                    "Replace",
+                                    "Ignore",
+                                    "Fail"
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "title": "DeleteOperation",
+                          "description": "Delete a document.",
+                          "required": [
+                            "id",
+                            "doc"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "doc": {
+                              "type": "null"
+                            },
+                            "policy": {
+                              "type": "object",
+                              "properties": {
+                                "missing": {
+                                  "type": "string",
+                                  "enum": [
+                                    "Ignore",
+                                    "Fail"
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "policy": {
+                    "type": "object",
+                    "properties": {
+                      "duplicate": {
+                        "type": "string",
+                        "enum": [
+                          "Replace",
+                          "Ignore",
+                          "Fail"
+                        ],
+                        "default": "Replace"
+                      },
+                      "missing": {
+                        "type": "string",
+                        "enum": [
+                          "Ignore",
+                          "Fail"
+                        ],
+                        "default": "Ignore"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Documents processed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "created": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "updated": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "deleted": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "required": [
+                            "created",
+                            "updated",
+                            "deleted"
+                          ],
+                          "title": "UpdateResult"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ],
+                      "title": "UploadDocsResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Index not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get documents",
+        "description": "Returns a paginated list of documents stored in an index.",
+        "operationId": "getDocs",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number (1-based).",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items per page.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "Filter by document IDs.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of documents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer"
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/IndexServiceDocEntry"
+                          }
+                        }
+                      },
+                      "required": [
+                        "total",
+                        "page",
+                        "limit",
+                        "data"
+                      ],
+                      "title": "ListDocsResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Index not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/indexes/{indexName}/docs/{docId}": {
+      "get": {
+        "summary": "Get document",
+        "description": "Returns a single document by ID from an index.",
+        "operationId": "getDoc",
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          },
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "description": "Unique ID of the document.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/IndexServiceDocEntry"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ],
+                      "title": "GetDocResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Index or document not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/indexes": {
+      "get": {
+        "summary": "List indexes",
+        "description": "Returns a paginated list of all available indexes.",
+        "operationId": "listIndexes",
+        "tags": [
+          "Indexes"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number (1-based).",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items per page.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of index names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer"
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ],
+                            "title": "Data"
+                          }
+                        }
+                      },
+                      "required": [
+                        "total",
+                        "page",
+                        "limit",
+                        "data"
+                      ],
+                      "title": "ListIndexResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/indexes/{indexName}": {
+      "get": {
+        "summary": "Get index",
+        "description": "Returns detailed metadata about a single index, including its schema and HNSW parameters.",
+        "operationId": "getIndex",
+        "tags": [
+          "Indexes"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Index metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "idSize": {
+                              "type": "integer"
+                            },
+                            "numDims": {
+                              "type": "integer"
+                            },
+                            "distanceType": {
+                              "type": "string",
+                              "enum": [
+                                "Manhattan",
+                                "Euclidean",
+                                "DotProduct",
+                                "Cosine"
+                              ]
+                            },
+                            "schema": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/IndexServiceAspect"
+                              }
+                            },
+                            "hnsw": {
+                              "type": "object",
+                              "properties": {
+                                "M": {
+                                  "type": "integer"
+                                },
+                                "Mmax": {
+                                  "type": "integer"
+                                },
+                                "Mmax0": {
+                                  "type": "integer"
+                                },
+                                "mL": {
+                                  "type": "number"
+                                },
+                                "efConstruction": {
+                                  "type": "integer"
+                                },
+                                "efSearch": {
+                                  "type": "integer"
+                                },
+                                "extendCandidates": {
+                                  "type": "boolean"
+                                },
+                                "keepPrunedConnections": {
+                                  "type": "boolean"
+                                },
+                                "maxStoreSize": {
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "M",
+                                "Mmax",
+                                "Mmax0",
+                                "mL",
+                                "efConstruction",
+                                "efSearch",
+                                "extendCandidates",
+                                "keepPrunedConnections",
+                                "maxStoreSize"
+                              ],
+                              "title": "Hnsw"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "idSize",
+                            "numDims",
+                            "distanceType",
+                            "schema",
+                            "hnsw"
+                          ],
+                          "title": "Index"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ],
+                      "title": "GetIndexResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Index not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Create index",
+        "description": "Creates a new index with the given name and configuration.",
+        "operationId": "createIndex",
+        "tags": [
+          "Indexes"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idSize": {
+                    "type": "integer"
+                  },
+                  "distanceType": {
+                    "type": "string",
+                    "enum": [
+                      "Manhattan",
+                      "Euclidean",
+                      "DotProduct",
+                      "Cosine"
+                    ]
+                  },
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/IndexServiceAspect"
+                    }
+                  },
+                  "hnsw": {
+                    "type": "object",
+                    "properties": {
+                      "M": {
+                        "type": "integer"
+                      },
+                      "Mmax": {
+                        "type": "integer"
+                      },
+                      "Mmax0": {
+                        "type": "integer"
+                      },
+                      "mL": {
+                        "type": "number"
+                      },
+                      "efConstruction": {
+                        "type": "integer"
+                      },
+                      "efSearch": {
+                        "type": "integer"
+                      },
+                      "extendCandidates": {
+                        "type": "boolean"
+                      },
+                      "keepPrunedConnections": {
+                        "type": "boolean"
+                      },
+                      "maxStoreSize": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [],
+                    "title": "HNSWConfig"
+                  }
+                },
+                "required": [
+                  "idSize",
+                  "schema"
+                ],
+                "title": "CreateIndexRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Index created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "created": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "created"
+                          ],
+                          "title": "Data"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ],
+                      "title": "CreateIndexResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "An index with the same name already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete index",
+        "description": "Deletes an index and removes its persisted data from disk.",
+        "operationId": "deleteIndex",
+        "tags": [
+          "Indexes"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "deleted": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "deleted"
+                          ],
+                          "title": "Data"
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ],
+                      "title": "DeleteIndexResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/indexes/{indexName}/search": {
+      "post": {
+        "summary": "Search index",
+        "description": "Performs a k-nearest-neighbour search against an existing index.",
+        "operationId": "searchIndex",
+        "tags": [
+          "Indexes"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IndexName"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "title": "QuerySearch",
+                    "required": [
+                      "k",
+                      "query"
+                    ],
+                    "properties": {
+                      "k": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "Number of nearest neighbours to return."
+                      },
+                      "query": {
+                        "type": "object",
+                        "description": "Map of aspect names to query values. Each value can be a primitive (string, number, boolean), object, array, null, or a raw vector specified as `{\"$raw\": [number, ...]}`.\n",
+                        "additionalProperties": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "title": "QueryVector",
+                              "required": [
+                                "$raw"
+                              ],
+                              "properties": {
+                                "$raw": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "number"
+                                  }
+                                }
+                              }
+                            },
+                            {}
+                          ]
+                        }
+                      },
+                      "weights": {
+                        "type": "object",
+                        "description": "Optional map of aspect names to weight multipliers.",
+                        "additionalProperties": {
+                          "type": "number"
+                        }
+                      },
+                      "accessFilter": {
+                        "type": "array",
+                        "description": "Optional access filter list. Null entries are permitted.",
+                        "items": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "withDocs": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to include the stored document in each result."
+                      },
+                      "withVectors": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to include the vector in each result."
+                      },
+                      "withExplanation": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to include an explanation of search aspects in each result."
+                      }
+                    },
+                    "example": {
+                      "k": 10,
+                      "query": {
+                        "title": "semantic search query",
+                        "category": "articles",
+                        "embedding": {
+                          "$raw": [
+                            0.1,
+                            0.2,
+                            0.3,
+                            0.4,
+                            0.5
+                          ]
+                        }
+                      },
+                      "weights": {
+                        "title": 2.0,
+                        "category": 1.0,
+                        "embedding": 1.5
+                      },
+                      "accessFilter": [
+                        "public",
+                        null
+                      ],
+                      "withDocs": true,
+                      "withVectors": false
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "title": "DocSearch",
+                    "required": [
+                      "k",
+                      "doc"
+                    ],
+                    "properties": {
+                      "k": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "Number of nearest neighbours to return."
+                      },
+                      "doc": {
+                        "type": "object",
+                        "description": "A document object to use as the query.",
+                        "additionalProperties": {}
+                      },
+                      "weights": {
+                        "type": "object",
+                        "description": "Optional map of aspect names to weight multipliers.",
+                        "additionalProperties": {
+                          "type": "number"
+                        }
+                      },
+                      "accessFilter": {
+                        "type": "array",
+                        "description": "Optional access filter list. Null entries are permitted.",
+                        "items": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "withDocs": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to include the stored document in each result."
+                      },
+                      "withVectors": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to include the vector in each result."
+                      },
+                      "withExplanation": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to include an explanation of search aspects in each result."
+                      }
+                    },
+                    "example": {
+                      "k": 5,
+                      "doc": {
+                        "title": "Example Document",
+                        "meta": {
+                          "category": "articles"
+                        },
+                        "content": "This is the document to find similar results for."
+                      },
+                      "weights": {
+                        "title": 2.0,
+                        "content": 1.0
+                      },
+                      "withDocs": true
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search results with distances.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "distance": {
+                                "type": "number"
+                              },
+                              "vector": {
+                                "type": "array",
+                                "items": {
+                                  "type": "number"
+                                }
+                              },
+                              "doc": {
+                                "type": "object",
+                                "additionalProperties": {}
+                              },
+                              "explanation": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "value": {},
+                                    "distance": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "name",
+                                    "value"
+                                  ],
+                                  "title": "SearchResultExplanation"
+                                }
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "distance"
+                            ],
+                            "title": "SearchResultRow"
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ],
+                      "title": "SearchIndexResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query vector dimension mismatch.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Index not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "IndexName": {
+        "name": "indexName",
+        "in": "path",
+        "required": true,
+        "description": "Unique name of the index.",
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number",
+            "description": "Time taken to process the request in milliseconds."
+          },
+          "status": {
+            "type": "string",
+            "description": "Status message indicating success."
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable error message."
+          }
+        }
+      },
+      "IndexServiceAspect": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "multiplier": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "path",
+          "settings"
+        ],
+        "title": "Aspect"
+      },
+      "IndexServiceDocEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "doc": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "vector": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "accessList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "doc",
+          "vector"
+        ],
+        "title": "DocEntry"
+      }
+    },
+    "responses": {
+      "ErrorResponse": {
+        "description": "An error occurred.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Aspected API",
+    "description": "REST API for the Aspected vector index server. Aspected is a database similar to vector databases that supports sparse vector queries where some dimensions of the search vector may be left undefined.\n",
+    "version": "0.3.0",
+    "contact": {
+      "name": "Aspected"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local development server"
+    }
+  ]
+}

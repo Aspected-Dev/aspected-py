@@ -1,0 +1,128 @@
+{{ header }}
+
+"""Aspected client -- a simple httpx-based Python client for the Aspected Database API."""
+
+from __future__ import annotations
+
+import httpx
+
+from .model import (
+    ErrorResult,
+{%- for imp in imports %}
+    {{ imp }},
+{%- endfor %}
+)
+
+
+class AspectedError(Exception):
+    """Raised when the Aspected API returns a non-success HTTP response.
+
+    Attributes
+    ----------
+    status : int
+        HTTP status code.
+    status_text : str
+        HTTP reason phrase.
+    error : str | None
+        Server-provided error message, if available.
+    """
+
+    def __init__(self, status: int, status_text: str, error: str | None = None) -> None:
+        self.status = status
+        self.status_text = status_text
+        self.error = error
+        message = f"{status} {status_text}"
+        if error:
+            message += f": {error}"
+        super().__init__(message)
+
+
+class AspectedClient:
+    """Synchronous client for the Aspected database.
+
+    Parameters
+    ----------
+    url : str
+        Base URL of the Aspected database server (e.g. ``"http://localhost:8080"``).
+    """
+
+    def __init__(self, url: str, **httpx_kwargs) -> None:
+        self._base_url = url.rstrip("/")
+        self._client = httpx.Client(base_url=self._base_url, **httpx_kwargs)
+
+    # ------------------------------------------------------------------
+    # Generated API Methods
+    # ------------------------------------------------------------------
+{% for op in operations %}
+    def {{ op.method_name }}(
+        self,
+{%- for p in op.path_params %}
+        {{ p.python_name }}: {{ p.type }},
+{%- endfor %}
+{%- if op.has_body %}
+        body: {{ op.request_class }},
+{%- endif %}
+{%- for p in op.query_params %}
+        {%- if not p.required %}
+        {{ p.python_name }}: {{ p.type }} | None = None,
+        {%- else %}
+        {{ p.python_name }}: {{ p.type }},
+        {%- endif %}
+{%- endfor %}
+    ) -> {{ op.response_class }}:
+        """{{ op.description }}"""
+{%- if op.query_params %}
+        params: dict = {}
+{%- for p in op.query_params %}
+        if {{ p.python_name }} is not None:
+            params["{{ p.name }}"] = {{ p.python_name }}
+{%- endfor %}
+{%- endif %}
+{%- if op.http_method in ("post", "put", "patch") and op.has_body %}
+        resp = self._client.{{ op.http_method }}(
+            f"{{ op.url_template }}",
+            content=body.model_dump_json(by_alias=True, exclude_none=True),
+            headers={"Content-Type": "application/json"},
+{%- if op.query_params %}
+            params=params,
+{%- endif %}
+        )
+{%- elif op.http_method in ("post", "put", "patch") %}
+        resp = self._client.{{ op.http_method }}(
+            f"{{ op.url_template }}",
+{%- if op.query_params %}
+            params=params,
+{%- endif %}
+        )
+{%- else %}
+        resp = self._client.{{ op.http_method }}(
+            f"{{ op.url_template }}",
+{%- if op.query_params %}
+            params=params,
+{%- endif %}
+        )
+{%- endif %}
+        if not resp.is_success:
+            error_msg: str | None = None
+            try:
+                error_result = ErrorResult.model_validate(resp.json())
+                error_msg = error_result.error
+            except Exception:
+                pass
+            raise AspectedError(resp.status_code, resp.reason_phrase, error_msg)
+        return {{ op.response_class }}.model_validate(resp.json())
+{% endfor %}
+    # ------------------------------------------------------------------
+    # Lifecycle
+    # ------------------------------------------------------------------
+
+    def close(self) -> None:
+        """Close the underlying HTTP connection pool."""
+        self._client.close()
+
+    def __enter__(self) -> AspectedClient:
+        return self
+
+    def __exit__(self, *args) -> None:
+        self.close()
+

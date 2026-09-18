@@ -1,0 +1,22 @@
+{{ header }}
+
+"""aspected-client – Python SDK for the Aspected database."""
+
+from .client import (
+    AspectedClient,
+    AspectedError,
+)
+from .model import (
+{%- for name in model_imports %}
+    {{ name }},
+{%- endfor %}
+)
+
+__all__ = [
+    "AspectedClient",
+    "AspectedError",
+{%- for name in model_imports %}
+    "{{ name }}",
+{%- endfor %}
+]
+

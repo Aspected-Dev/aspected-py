@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  generated-code:
+    name: Generated code is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          python-version-file: .python-version
+          enable-cache: true
+      - name: Regenerate SDK from openapi.json
+        run: uv build
+      - name: Fail if generated code differs from committed code
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::Generated code is out of date. Run 'uv build' and commit the result."
+            exit 1
+          fi
+
+  format-lint-typecheck:
+    name: Format, lint & type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          python-version-file: .python-version
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --all-groups
+      - name: Check formatting (ruff)
+        run: uv run ruff format --check
+      - name: Lint (ruff)
+        run: uv run ruff check
+      - name: Type check (ty)
+        run: uv run ty check

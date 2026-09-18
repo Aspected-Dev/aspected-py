@@ -1,0 +1,69 @@
+[project]
+name = "aspected-client"
+description = "Python client for the Aspected database"
+readme = "README.md"
+authors = [
+    { name = "mervindejong", email = "mervin.dejong@xillio.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "httpx[brotli]>=0.28.1",
+    "pydantic>=2.13.4",
+]
+dynamic = ["version"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.20",
+    "ty>=0.0.80",
+]
+release = [
+    "hatchling>=1.25.0",
+    "uv-dynamic-versioning>=0.14.1",
+]
+
+[build-system]
+requires = [
+    "hatchling>=1.25.0",
+    "uv-dynamic-versioning>=0.14.1",
+    "datamodel-code-generator[ruff]>=0.67.0",
+    "jinja2>=3.1.6",
+    "ruff>=0.15.20",
+    "patch-ng>=1.18.0",
+]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.hooks.custom]
+
+[tool.uv]
+exclude-newer = "1 week"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.ruff]
+line-length = 99
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+ignore = ["E203", "E501"]
+
+[tool.ty.src]
+include = [
+    "src/",
+    "scripts/",
+    "examples/"
+]

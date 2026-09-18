@@ -1,0 +1,47 @@
+diff --git a/src/aspected_client/__init__.py b/src/aspected_client/__init__.py
+index 6f3484f..de67380 100644
+--- a/src/aspected_client/__init__.py
++++ b/src/aspected_client/__init__.py
+@@ -26,12 +26,12 @@ from .model import (
+     Hnsw,
+     HNSWConfig,
+     Index,
+-    IndexesIndexNameSearchPostRequest,
+     ListIndexesResult,
+     ListIndexResultData,
+     Missing,
+     QuerySearch,
+     QueryVector,
++    SearchIndexPayload,
+     SearchIndexResult,
+     SearchResultExplanation,
+     SearchResultRow,
+@@ -66,12 +66,12 @@ __all__ = [
+     "HNSWConfig",
+     "Hnsw",
+     "Index",
+-    "IndexesIndexNameSearchPostRequest",
+     "ListIndexResultData",
+     "ListIndexesResult",
+     "Missing",
+     "QuerySearch",
+     "QueryVector",
++    "SearchIndexPayload",
+     "SearchIndexResult",
+     "SearchResultExplanation",
+     "SearchResultRow",
+diff --git a/src/aspected_client/model.py b/src/aspected_client/model.py
+index cee7ece..7055b36 100644
+--- a/src/aspected_client/model.py
++++ b/src/aspected_client/model.py
+@@ -308,9 +308,7 @@ class DocSearch(BaseModel):
+     """Whether to include an explanation of search aspects in each result."""
+ 
+ 
+-type IndexesIndexNameSearchPostRequest = Annotated[
+-    QuerySearch | DocSearch, Field(title="SearchIndexPayload")
+-]
++type SearchIndexPayload = Annotated[QuerySearch | DocSearch, Field(title="SearchIndexPayload")]
+ 
+ 
+ class SearchResultExplanation(BaseModel):
